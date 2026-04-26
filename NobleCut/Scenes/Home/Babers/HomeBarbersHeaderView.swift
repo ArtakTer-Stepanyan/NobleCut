@@ -1,5 +1,5 @@
 //
-//  BarbersHeaderView.swift
+//  HomeBarbersHeaderView.swift
 //  NobleCut
 //
 //  Created by Artak Ter-Stepanyan on 24.04.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct BarbersHeaderView: View {
+struct HomeBarbersHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Top Rated Barbers")
@@ -35,5 +35,5 @@ struct BarbersHeaderView: View {
 }
 
 #Preview {
-    BarbersHeaderView()
+    HomeBarbersHeaderView()
 }

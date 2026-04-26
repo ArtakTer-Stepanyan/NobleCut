@@ -1,5 +1,5 @@
 //
-//  BarbersListItemView.swift
+//  HomeBarbersListItemView.swift
 //  NobleCut
 //
 //  Created by Artak Ter-Stepanyan on 24.04.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct BarbersListItemView: View {
+struct HomeBarbersListItemView: View {
     
     let name: String
     let specialty: String
@@ -43,5 +43,5 @@ struct BarbersListItemView: View {
 }
 
 #Preview {
-    BarbersListItemView(name: "Marcus", specialty: "SENIOR MASTER STYLIST")
+    HomeBarbersListItemView(name: "Marcus", specialty: "SENIOR MASTER STYLIST")
 }

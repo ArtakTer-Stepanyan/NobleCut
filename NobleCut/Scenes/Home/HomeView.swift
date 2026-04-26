@@ -19,7 +19,7 @@ struct HomeView: View {
                 VStack() {
                     NavigationBar()
                     HomeDescriptionCardView()
-                    BarbersView()
+                    HomeBarbersView()
                     HomeServiceView(services: [
                         .init(id: 0, type: .haircut, price: 45),
                         .init(id: 1, type: .trim, price: 38),

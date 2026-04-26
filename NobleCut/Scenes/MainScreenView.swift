@@ -24,7 +24,7 @@ struct MainScreenView: View {
 
 
             Tab("Barbers", systemImage: "person.2", value: 2) {
-                EmptyView()
+                BarbersView()
             }
             
             Tab("Calendar", systemImage: "calendar", value: 2) {
