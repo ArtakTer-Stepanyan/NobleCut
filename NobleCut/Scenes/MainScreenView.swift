@@ -19,7 +19,7 @@ struct MainScreenView: View {
 
 
             Tab("Services", systemImage: "scissors", value: 1) {
-                EmptyView()
+                ServiceView()
             }
 
 

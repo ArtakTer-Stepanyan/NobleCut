@@ -1,5 +1,5 @@
 //
-//  ServiceView.swift
+//  HomeServiceView.swift
 //  NobleCut
 //
 //  Created by Artak Ter-Stepanyan on 26.04.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ServiceView: View {
+struct HomeServiceView: View {
     let services: [Service]
     
     var body: some View {
@@ -22,7 +22,7 @@ struct ServiceView: View {
                 
                 VStack(spacing: 16) {
                     ForEach(services) { service in
-                        ServiceItemView(service: service)
+                        HomeServiceItemView(service: service)
                     }
                 }
                 
@@ -32,7 +32,7 @@ struct ServiceView: View {
 }
 
 #Preview {
-    ServiceView(
+    HomeServiceView(
         services: [
             .init(id: 0, type: .haircut, price: 45),
             .init(id: 1, type: .trim, price: 38),

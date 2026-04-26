@@ -1,5 +1,5 @@
 //
-//  ServiceItemView.swift
+//  HomeServiceItemView.swift
 //  NobleCut
 //
 //  Created by Artak Ter-Stepanyan on 26.04.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ServiceItemView: View {
+struct HomeServiceItemView: View {
     
     let service: Service
     
@@ -40,5 +40,5 @@ struct ServiceItemView: View {
 }
 
 #Preview {
-    ServiceItemView(service: .init(id: 0, type: .deluxe, price: 45))
+    HomeServiceItemView(service: .init(id: 0, type: .deluxe, price: 45))
 }

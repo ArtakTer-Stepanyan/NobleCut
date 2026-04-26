@@ -11,6 +11,7 @@ struct Service: Codable, Identifiable {
     let id: Int
     let type: ServiceType
     let price: Int
+    var duration: Int = 10
 }
 
 enum ServiceType: Int, Codable {
