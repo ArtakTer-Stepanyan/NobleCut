@@ -20,6 +20,7 @@ struct BarbersView: View {
                     .init(id: Int.random(in: 0...10), name: "Marcus", specialty: "STYLING MASTER"),
                     .init(id: Int.random(in: 11...20), name: "John", specialty: "STEAMING MASTER"),
                 ])
+                .padding(.leading, 21)
             }
         }
     }

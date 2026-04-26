@@ -19,12 +19,12 @@ struct NavigationBar: View {
             } label: {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 26, weight: .medium))
-                    .foregroundStyle(Color.yellow)
+                    .foregroundStyle(Color.appYellow)
             }
 
             Text("NOBLECUT")
                 .font(.system(size: 28, weight: .bold, design: .serif))
-                .foregroundStyle(Color.yellow)
+                .foregroundStyle(Color.appYellow)
 
             Spacer()
         }
@@ -32,7 +32,6 @@ struct NavigationBar: View {
         .frame(height: 100)
         .frame(maxWidth: .infinity)
         .background(Color.black)
-        .padding(.horizontal, 26)
     }
 }
 

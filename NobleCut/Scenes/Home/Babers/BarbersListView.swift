@@ -12,8 +12,8 @@ struct BarbersListView: View {
     let barbers: [Barber]
     
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 22) {
                 ForEach(barbers) { barber in
                     BarbersListItemView(name: barber.name, specialty: barber.specialty)
                 }

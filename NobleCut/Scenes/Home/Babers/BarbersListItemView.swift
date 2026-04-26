@@ -39,7 +39,6 @@ struct BarbersListItemView: View {
             )
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, 61)
     }
 }
 

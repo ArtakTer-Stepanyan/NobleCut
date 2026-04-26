@@ -11,7 +11,8 @@ import SwiftUI
 struct NobleCutApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainScreenView()
+                .preferredColorScheme(.dark)
         }
     }
 }
