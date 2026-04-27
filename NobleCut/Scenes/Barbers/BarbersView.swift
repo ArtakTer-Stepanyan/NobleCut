@@ -10,6 +10,8 @@ import SwiftUI
 struct BarbersView: View {
     
     @StateObject var viewModel: BarbersViewModel = BarbersViewModel()
+    @State private var isContentVisible = false
+    @State private var hasAnimatedOnce = false
     
     var body: some View {
         ZStack {
@@ -19,17 +21,33 @@ struct BarbersView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     NavigationBar()
+                        .screenEntrance(isVisible: isContentVisible)
+                    
                     BarbersHeaderView()
+                        .screenEntrance(isVisible: isContentVisible, delay: 0.08)
                     
                     VStack(spacing: 50) {
-                        ForEach(viewModel.barbers) { item in
-                            BarberItemView(barberDetails: item)
+                        ForEach(Array(viewModel.barbers.enumerated()), id: \.element.id) { indexedBarber in
+                            BarberItemView(barberDetails: indexedBarber.element)
+                                .screenEntrance(
+                                    isVisible: isContentVisible,
+                                    delay: 0.18 + (Double(indexedBarber.offset) * 0.12)
+                                )
                         }
                     }
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 20)
+        }
+        .onAppear {
+            guard !hasAnimatedOnce else {
+                isContentVisible = true
+                return
+            }
+            
+            hasAnimatedOnce = true
+            isContentVisible = true
         }
     }
 }

@@ -10,6 +10,8 @@ import SwiftUI
 struct ServiceView: View {
     
     @StateObject var viewModel: ServiceViewModel = ServiceViewModel()
+    @State private var isContentVisible = false
+    @State private var hasAnimatedOnce = false
     
     var body: some View {
         ZStack {
@@ -19,11 +21,16 @@ struct ServiceView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack() {
                     NavigationBar()
+                        .screenEntrance(isVisible: isContentVisible)
+                    
                     ServiceHeaderView()
+                        .screenEntrance(isVisible: isContentVisible, delay: 0.08)
                     
                     VStack(alignment: .leading, spacing: 33) {
-                        ForEach(viewModel.sections) { section in
-                            
+                        ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { indexedSection in
+                            let section = indexedSection.element
+                            let sectionIndex = indexedSection.offset
+
                             HStack(spacing: 16) {
                                 Image(section.type.iconName)
                                 Text("Section")
@@ -32,9 +39,20 @@ struct ServiceView: View {
                                 
                             }
                             .padding(.horizontal, 12)
+                            .screenEntrance(
+                                isVisible: isContentVisible,
+                                delay: sectionDelay(for: sectionIndex)
+                            )
                             
-                            ForEach(section.services) { service in
-                                ServiceItemView(service: service)
+                            ForEach(Array(section.services.enumerated()), id: \.element.id) { indexedService in
+                                ServiceItemView(service: indexedService.element)
+                                    .screenEntrance(
+                                        isVisible: isContentVisible,
+                                        delay: serviceDelay(
+                                            sectionIndex: sectionIndex,
+                                            serviceIndex: indexedService.offset
+                                        )
+                                    )
                             }
                         }
                     }
@@ -45,6 +63,23 @@ struct ServiceView: View {
                 .padding(.bottom, 20)
             }
         }
+        .onAppear {
+            guard !hasAnimatedOnce else {
+                isContentVisible = true
+                return
+            }
+            
+            hasAnimatedOnce = true
+            isContentVisible = true
+        }
+    }
+    
+    private func sectionDelay(for sectionIndex: Int) -> Double {
+        0.18 + (Double(sectionIndex) * 0.14)
+    }
+    
+    private func serviceDelay(sectionIndex: Int, serviceIndex: Int) -> Double {
+        0.26 + (Double(sectionIndex) * 0.2) + (Double(serviceIndex) * 0.08)
     }
 }
 
