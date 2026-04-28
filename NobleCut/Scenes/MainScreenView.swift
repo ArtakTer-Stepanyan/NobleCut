@@ -27,8 +27,8 @@ struct MainScreenView: View {
                 BarbersView()
             }
             
-            Tab("Calendar", systemImage: "calendar", value: 2) {
-                EmptyView()
+            Tab("Calendar", systemImage: "calendar", value: 3) {
+                BookingView()
             }
         }
         .tint(.appYellow)
