@@ -12,6 +12,7 @@ struct BarbersView: View {
     @StateObject var viewModel: BarbersViewModel = BarbersViewModel()
     @State private var isContentVisible = false
     @State private var hasAnimatedOnce = false
+    var onMenuTap: (() -> Void)?
     
     var body: some View {
         ZStack {
@@ -20,7 +21,7 @@ struct BarbersView: View {
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
-                    NavigationBar()
+                    NavigationBar(onMenuTap: onMenuTap)
                         .screenEntrance(isVisible: isContentVisible)
                     
                     BarbersHeaderView()

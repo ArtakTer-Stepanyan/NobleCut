@@ -13,6 +13,7 @@ import Combine
 final class ReservationViewModel: ObservableObject {
     @Published private(set) var reservations: [Reservation] = []
     @Published private(set) var isLoading = false
+    @Published private(set) var reservationPendingCancellation: Reservation?
 
     private let repository: any ReservationRepositoryProtocol
 
@@ -26,5 +27,22 @@ final class ReservationViewModel: ObservableObject {
         isLoading = true
         reservations = await repository.fetchReservations()
         isLoading = false
+    }
+
+    func promptCancellation(for reservation: Reservation) {
+        reservationPendingCancellation = reservation
+    }
+
+    func dismissCancellationPrompt() {
+        reservationPendingCancellation = nil
+    }
+
+    func cancelReservation(_ reservation: Reservation) async {
+        reservationPendingCancellation = nil
+
+        let didDelete = await repository.deleteReservation(id: reservation.id)
+        guard didDelete else { return }
+
+        reservations.removeAll { $0.id == reservation.id }
     }
 }

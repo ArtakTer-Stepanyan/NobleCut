@@ -13,7 +13,7 @@ struct NobleCutApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainScreenView(appContainer: appContainer)
+            AppFlowView(appContainer: appContainer)
                 .preferredColorScheme(.dark)
         }
     }

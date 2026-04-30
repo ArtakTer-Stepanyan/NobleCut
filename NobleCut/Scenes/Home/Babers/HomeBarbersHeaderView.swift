@@ -11,12 +11,12 @@ struct HomeBarbersHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Top Rated Barbers")
-                .font(.system(size: 32))
+                .font(.system(size: 32, design: .serif))
                 .fontWeight(.bold)
                 .foregroundStyle(Color.white)
                 
             Text("Meet our master craftsmen")
-                .font(.system(size: 24))
+                .font(.system(size: 24, design: .serif))
                 .fontWeight(.regular)
                 .foregroundStyle(Color.gray)
             

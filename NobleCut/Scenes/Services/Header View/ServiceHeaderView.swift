@@ -15,11 +15,11 @@ struct ServiceHeaderView: View {
             
             VStack(alignment: .center, spacing: 18) {
                 Text("Select Your Service")
-                    .font(.system(size: 40, weight: .semibold))
+                    .font(.system(size: 40, weight: .semibold, design: .serif))
                     .foregroundStyle(Color.white)
                 
                 Text("Precision grooming tailored to your unique style. Choose from our curated menu of heritage barbering services.")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.textGray)
                 

@@ -24,11 +24,11 @@ struct HomeBarbersListItemView: View {
 
             VStack(spacing: 0) {
                 Text(name)
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .serif))
                     .foregroundStyle(.white)
                     .padding(.top)
                 Text(specialty)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, design: .serif))
                     .foregroundStyle(.white)
                     .padding()
             }

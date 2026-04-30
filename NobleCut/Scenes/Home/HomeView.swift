@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var isContentVisible = false
     @State private var hasAnimatedOnce = false
+    var onMenuTap: (() -> Void)?
 
     var body: some View {
         ZStack {
@@ -18,7 +19,7 @@ struct HomeView: View {
             
             ScrollView(showsIndicators: false) {
                 VStack() {
-                    NavigationBar()
+                    NavigationBar(onMenuTap: onMenuTap)
                         .screenEntrance(isVisible: isContentVisible)
                     
                     HomeDescriptionCardView()

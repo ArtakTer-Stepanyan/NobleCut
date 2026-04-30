@@ -16,19 +16,19 @@ struct HomeServiceItemView: View {
             Image(service.type.iconName)
             VStack(alignment: .leading, spacing: 10) {
                 Text(service.type.title)
-                    .font(.system(size: 22))
+                    .font(.system(size: 22, design: .serif))
                     .minimumScaleFactor(0.8)
                     .lineLimit(1)
                     .foregroundStyle(Color.white)
                 Text(service.type.description)
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .serif))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .foregroundStyle(Color.textGray)
             }
             
             Text("$\(service.price)")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold, design: .serif))
                 .foregroundStyle(Color.appYellow)
         }
         .padding(.horizontal, 16)

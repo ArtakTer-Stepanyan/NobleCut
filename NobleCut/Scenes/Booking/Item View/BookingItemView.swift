@@ -18,11 +18,11 @@ struct BookingItemView: View {
             
             VStack(alignment: .leading, spacing: 10) {
                 Text("Master Grooming")
-                    .font(.system(size: 20))
+                    .font(.system(size: 20, design: .serif))
                     .foregroundStyle(.white)
                 
                 Text("$85 • 30 min")
-                    .font(.system(size: 18))
+                    .font(.system(size: 18, design: .serif))
                     .foregroundStyle(.appYellow)
             }
         }

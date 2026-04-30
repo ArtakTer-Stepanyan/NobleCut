@@ -74,7 +74,7 @@ struct BookingCalendarView: View {
         HStack(spacing: 0) {
             ForEach(Array(Self.weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold, design: .serif))
                     .foregroundStyle(.white.opacity(0.28))
                     .frame(maxWidth: .infinity)
             }
@@ -88,7 +88,7 @@ struct BookingCalendarView: View {
                     onSelectDate(day.date)
                 } label: {
                     Text(day.numberText)
-                        .font(.system(size: 15, weight: day.isSelected ? .semibold : .medium))
+                        .font(.system(size: 15, weight: day.isSelected ? .semibold : .medium, design: .serif))
                         .foregroundStyle(dayForegroundColor(for: day))
                         .frame(width: 34, height: 34)
                         .background(
@@ -171,7 +171,7 @@ struct BookingCalendarView: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .bold))
+                .font(.system(size: 12, weight: .bold, design: .serif))
                 .foregroundStyle(.white.opacity(0.86))
                 .frame(width: 30, height: 30)
                 .background(Circle().fill(Color.clear))

@@ -20,6 +20,7 @@ enum MainScreenTab: Int, Hashable {
 final class MainScreenViewModel: ObservableObject {
     @Published var selectedTab: MainScreenTab = .home
     @Published var activeBookingService: Service?
+    @Published var isSideMenuPresented = false
 
     func presentBooking(for service: Service) {
         activeBookingService = service
@@ -32,5 +33,13 @@ final class MainScreenViewModel: ObservableObject {
     func completeBookingFlow() {
         activeBookingService = nil
         selectedTab = .reservations
+    }
+
+    func openSideMenu() {
+        isSideMenuPresented = true
+    }
+
+    func closeSideMenu() {
+        isSideMenuPresented = false
     }
 }

@@ -45,7 +45,7 @@ struct HomeDescriptionCardView: View {
                             .lineSpacing(4)
 
                         Text("Precision grooming meet timeless luxury. Book your chair at the city's finest")
-                            .font(.system(size: 18, weight: .regular))
+                            .font(.system(size: 18, weight: .regular, design: .serif))
                             .foregroundColor(.white.opacity(0.85))
                             .lineSpacing(10)
                             .multilineTextAlignment(.leading)

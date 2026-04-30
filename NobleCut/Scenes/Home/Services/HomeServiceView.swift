@@ -17,7 +17,7 @@ struct HomeServiceView: View {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Popular Services")
                     .foregroundStyle(Color.white)
-                    .font(.system(size: 32))
+                    .font(.system(size: 32, design: .serif))
                     .padding(.leading, 16)
                 
                 VStack(spacing: 16) {

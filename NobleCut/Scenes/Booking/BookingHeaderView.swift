@@ -13,19 +13,19 @@ struct BookingHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("BOOKING SELECTION")
-                .font(.system(size: 18))
+                .font(.system(size: 18, design: .serif))
                 .foregroundStyle(.appYellow)
 
             Text(service.type.title)
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: 28, weight: .semibold, design: .serif))
                 .foregroundStyle(.white)
 
             Text("\(service.type.description) • \(service.duration) min • $\(service.price)")
-                .font(.system(size: 16))
+                .font(.system(size: 16, design: .serif))
                 .foregroundStyle(Color.textGray)
 
             Text("Select a date and time to confirm your reservation.")
-                .font(.system(size: 15))
+                .font(.system(size: 15, design: .serif))
                 .foregroundStyle(.white.opacity(0.82))
         }
         .frame(maxWidth: .infinity, minHeight: 175, alignment: .leading)

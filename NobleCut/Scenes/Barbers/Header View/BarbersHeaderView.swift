@@ -15,11 +15,11 @@ struct BarbersHeaderView: View {
             
             VStack(alignment: .center, spacing: 18) {
                 Text("Select Your Master")
-                    .font(.system(size: 40, weight: .semibold))
+                    .font(.system(size: 40, weight: .semibold, design: .serif))
                     .foregroundStyle(Color.white)
                 
                 Text("Choose from our curated collective of grooming specialists, each bringing a unique heritage of precision and style.")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.textGray)
                 

@@ -36,16 +36,16 @@ struct BarberItemView: View {
             
             VStack(alignment: .leading, spacing: 0) {
                 Text(barberDetails.name)
-                    .font(.system(size: 32, weight: .medium))
+                    .font(.system(size: 32, weight: .medium, design: .serif))
                     .foregroundStyle(.white)
                     .padding(.top)
                 Text(barberDetails.specialty.title.uppercased())
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold, design: .serif))
                     .foregroundStyle(.appYellow)
                     .padding(.top)
                 
                 Text(barberDetails.description)
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .serif))
                     .foregroundStyle(.textGray)
                     .padding(.vertical)
             }
@@ -57,7 +57,7 @@ struct BarberItemView: View {
                     // action
                 } label: {
                     Text("VIEW\nPROFILE")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 16, weight: .medium, design: .serif))
                         .foregroundStyle(.black)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
@@ -75,7 +75,7 @@ struct BarberItemView: View {
                 Button {
                 } label: {
                     Image(systemName: "calendar")
-                        .font(.system(size: 20, weight: .regular))
+                        .font(.system(size: 20, weight: .regular, design: .serif))
                         .foregroundStyle(.textGray)
                         .frame(width: 34, height: 34)
                 }
@@ -86,7 +86,7 @@ struct BarberItemView: View {
                 Button {
                 } label: {
                     Image(systemName: "scissors")
-                        .font(.system(size: 20, weight: .regular))
+                        .font(.system(size: 20, weight: .regular, design: .serif))
                         .foregroundStyle(.textGray)
                         .frame(width: 34, height: 34)
                 }
@@ -97,7 +97,7 @@ struct BarberItemView: View {
                 Button {
                 } label: {
                     Image(systemName: "message")
-                        .font(.system(size: 20, weight: .regular))
+                        .font(.system(size: 20, weight: .regular, design: .serif))
                         .foregroundStyle(.textGray)
                         .frame(width: 34, height: 34)
                 }

@@ -14,7 +14,7 @@ struct BookingDayTimeView: View {
     
     var body: some View {
         Text(title)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.system(size: 15, weight: .semibold, design: .serif))
             .foregroundStyle(foregroundColor)
             .frame(maxWidth: .infinity)
             .frame(height: 48)

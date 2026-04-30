@@ -10,6 +10,7 @@ import Foundation
 protocol ReservationRepositoryProtocol: AnyObject {
     func fetchReservations() async -> [Reservation]
     func createReservation(service: Service, scheduledAt: Date) async -> Reservation
+    func deleteReservation(id: UUID) async -> Bool
 }
 
 final class ReservationRepository: ReservationRepositoryProtocol {
@@ -31,6 +32,14 @@ final class ReservationRepository: ReservationRepositoryProtocol {
         storage.insert(reservation, at: 0)
         storage.sort(by: Self.sortReservations)
         return reservation
+    }
+
+    func deleteReservation(id: UUID) async -> Bool {
+        try? await Task.sleep(for: .milliseconds(200))
+
+        let originalCount = storage.count
+        storage.removeAll { $0.id == id }
+        return storage.count != originalCount
     }
 
     private static func sortReservations(lhs: Reservation, rhs: Reservation) -> Bool {

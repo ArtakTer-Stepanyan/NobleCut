@@ -10,10 +10,15 @@ import SwiftUI
 struct ReservationView: View {
 
     @StateObject private var viewModel: ReservationViewModel
+    private let onMenuTap: (() -> Void)?
 
     @MainActor
-    init(viewModel: ReservationViewModel? = nil) {
+    init(
+        viewModel: ReservationViewModel? = nil,
+        onMenuTap: (() -> Void)? = nil
+    ) {
         _viewModel = StateObject(wrappedValue: viewModel ?? ReservationViewModel())
+        self.onMenuTap = onMenuTap
     }
 
     var body: some View {
@@ -22,12 +27,17 @@ struct ReservationView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                NavigationBar()
+                NavigationBar(onMenuTap: onMenuTap)
                 if !viewModel.reservations.isEmpty {
                     ScrollView(.vertical) {
                         VStack(spacing: 16) {
                             ForEach(viewModel.reservations) { reservation in
-                                ReservationItemView(reservation: reservation)
+                                Button {
+                                    viewModel.promptCancellation(for: reservation)
+                                } label: {
+                                    ReservationItemView(reservation: reservation)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.top, 20)
@@ -46,7 +56,7 @@ struct ReservationView: View {
                         Spacer()
                         Text("You have no reservation")
                             .foregroundStyle(.white)
-                            .font(.system(size: 30))
+                            .font(.system(size: 30, design: .serif))
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -58,6 +68,36 @@ struct ReservationView: View {
                 await viewModel.loadReservations()
             }
         }
+        .alert(
+            "Cancel Reservation?",
+            isPresented: isCancellationAlertPresented,
+            presenting: viewModel.reservationPendingCancellation
+        ) { reservation in
+            Button("No", role: .cancel) {
+                viewModel.dismissCancellationPrompt()
+            }
+
+            Button("Yes", role: .destructive) {
+                Task {
+                    await viewModel.cancelReservation(reservation)
+                }
+            }
+        } message: { reservation in
+            Text("Do you want to cancel your \(reservation.service.type.title) reservation?")
+        }
+    }
+
+    private var isCancellationAlertPresented: Binding<Bool> {
+        Binding(
+            get: {
+                viewModel.reservationPendingCancellation != nil
+            },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissCancellationPrompt()
+                }
+            }
+        )
     }
 }
 

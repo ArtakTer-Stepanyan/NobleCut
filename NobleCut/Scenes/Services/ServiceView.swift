@@ -12,14 +12,17 @@ struct ServiceView: View {
     @StateObject private var viewModel: ServiceViewModel
     @State private var isContentVisible = false
     @State private var hasAnimatedOnce = false
+    private let onMenuTap: (() -> Void)?
     private let onSelectService: (Service) -> Void
 
     @MainActor
     init(
         viewModel: ServiceViewModel? = nil,
+        onMenuTap: (() -> Void)? = nil,
         onSelectService: @escaping (Service) -> Void = { _ in }
     ) {
         _viewModel = StateObject(wrappedValue: viewModel ?? ServiceViewModel())
+        self.onMenuTap = onMenuTap
         self.onSelectService = onSelectService
     }
 
@@ -30,7 +33,7 @@ struct ServiceView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack {
-                    NavigationBar()
+                    NavigationBar(onMenuTap: onMenuTap)
                         .screenEntrance(isVisible: isContentVisible)
 
                     ServiceHeaderView()
@@ -49,7 +52,7 @@ struct ServiceView: View {
                                 HStack(spacing: 16) {
                                     Image(section.type.iconName)
                                     Text(section.type.sectionTitle)
-                                        .font(.system(size: 32))
+                                        .font(.system(size: 32, design: .serif))
                                         .foregroundStyle(Color.white)
                                 }
                                 .padding(.horizontal, 12)

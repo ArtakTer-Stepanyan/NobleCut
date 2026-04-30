@@ -20,11 +20,11 @@ struct ReservationItemView: View {
                 
                 VStack(alignment: .leading, spacing: 10) {
                     Text(reservation.service.type.title)
-                        .font(.system(size: 20))
+                        .font(.system(size: 20, design: .serif))
                         .foregroundStyle(.white)
                     
                     Text("$\(reservation.service.price) • \(reservation.service.duration) min")
-                        .font(.system(size: 18))
+                        .font(.system(size: 18, design: .serif))
                         .foregroundStyle(.appYellow)
                 }
             }

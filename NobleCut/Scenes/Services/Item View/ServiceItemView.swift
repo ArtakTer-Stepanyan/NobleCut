@@ -16,32 +16,32 @@ struct ServiceItemView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text(service.type.title)
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.system(size: 22, weight: .semibold, design: .serif))
                         .minimumScaleFactor(0.8)
                         .foregroundStyle(Color.white)
                     
                     Spacer()
                     
                     Text("$\(service.price)")
-                        .font(.system(size: 22))
+                        .font(.system(size: 22, design: .serif))
                         .foregroundStyle(Color.appYellow)
                 }
                 
                 Text(service.type.description)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, design: .serif))
                     .foregroundStyle(Color.textGray)
             }
         
             HStack {
                 Text("\(service.duration) MIN")
                     .foregroundStyle(Color.textGray)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, design: .serif))
                 
                 Spacer()
                 
                 Button(action: onSelect) {
                     Text("SELECT")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 18, weight: .medium, design: .serif))
                         .foregroundStyle(.appYellow)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 14)

@@ -189,7 +189,7 @@ struct BookingView: View {
         Button(action: action) {
             Text(title)
                 .multilineTextAlignment(.center)
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 15, weight: .bold, design: .serif))
                 .foregroundStyle(foregroundColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
