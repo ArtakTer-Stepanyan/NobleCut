@@ -15,99 +15,153 @@ protocol AuthRepositoryProtocol: AnyObject {
 }
 
 final class AuthRepository: AuthRepositoryProtocol {
-    private struct StoredUser: Codable {
-        let fullName: String
-        let username: String
+    private struct LoginRequest: Encodable {
+        let userName: String
         let password: String
+
+        enum CodingKeys: String, CodingKey {
+            case userName = "UserName"
+            case password = "Password"
+        }
     }
 
+    private struct RegisterRequest: Encodable {
+        let fullName: String
+        let userName: String
+        let password: String
+
+        enum CodingKeys: String, CodingKey {
+            case fullName = "FullName"
+            case userName = "UserName"
+            case password = "Password"
+        }
+    }
+
+    private struct AuthTokenResponse: Decodable {
+        let jwt: String
+    }
+
+    private struct APIErrorResponse: Decodable {
+        let error: String?
+        let message: String?
+        let status: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case error = "Error"
+            case message
+            case status = "Status"
+        }
+    }
+
+    private struct JWTClaims: Decodable {
+        let expiration: TimeInterval?
+        let uniqueName: String?
+        let uriName: String?
+        let name: String?
+
+        enum CodingKeys: String, CodingKey {
+            case expiration = "exp"
+            case uniqueName = "unique_name"
+            case uriName = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+            case name
+        }
+
+        var resolvedUsername: String? {
+            uriName?.nilIfBlank ?? uniqueName?.nilIfBlank ?? name?.nilIfBlank
+        }
+
+        var resolvedFullName: String? {
+            guard let name = name?.nilIfBlank else { return nil }
+            guard name != resolvedUsername else { return nil }
+            return name
+        }
+    }
+
+    static let defaultBaseURL = URL(
+        string: ProcessInfo.processInfo.environment["NOBLECUT_AUTH_BASE_URL"]
+            ?? "http://localhost:5141/api/Auth"
+    )!
+
+    private let baseURL: URL
+    private let urlSession: URLSession
     private let fileManager: FileManager
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    init(fileManager: FileManager = .default) {
+    init(
+        baseURL: URL = AuthRepository.defaultBaseURL,
+        urlSession: URLSession = .shared,
+        fileManager: FileManager = .default
+    ) {
+        self.baseURL = baseURL
+        self.urlSession = urlSession
         self.fileManager = fileManager
     }
 
     func restoreSession() async -> AuthSession? {
-        try? await Task.sleep(for: .milliseconds(120))
-        return loadSession()
+        guard let session = loadSession() else {
+            return nil
+        }
+
+        guard isTokenStillValid(session.token) else {
+            clearPersistedSession()
+            return nil
+        }
+
+        return session
     }
 
     func login(username: String, password: String) async throws -> AuthSession {
-        try? await Task.sleep(for: .milliseconds(250))
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let normalizedUsername = normalize(username)
-        let normalizedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        let users = loadUsers()
-
-        guard !users.isEmpty else {
-            throw AuthRepositoryError.noRegisteredUser
-        }
-
-        guard let matchingUser = users.first(where: {
-            $0.username == normalizedUsername && $0.password == normalizedPassword
-        }) else {
+        guard !trimmedUsername.isEmpty, !trimmedPassword.isEmpty else {
             throw AuthRepositoryError.invalidCredentials
         }
 
-        let session = makeSession(for: matchingUser)
+        let response = try await sendRequest(
+            path: "login",
+            body: LoginRequest(userName: trimmedUsername, password: trimmedPassword)
+        )
+
+        let session = try makeSession(
+            jwt: response.jwt,
+            fallbackUsername: trimmedUsername,
+            fallbackFullName: nil
+        )
         try persist(session, to: sessionFileURL)
         return session
     }
 
     func register(fullName: String, username: String, password: String) async throws -> AuthSession {
-        try? await Task.sleep(for: .milliseconds(300))
+        let trimmedFullName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let normalizedFullName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedUsername = normalize(username)
-        let normalizedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !normalizedFullName.isEmpty, !normalizedUsername.isEmpty, !normalizedPassword.isEmpty else {
+        guard !trimmedFullName.isEmpty, !trimmedUsername.isEmpty, !trimmedPassword.isEmpty else {
             throw AuthRepositoryError.invalidRegistrationData
         }
 
-        var users = loadUsers()
-
-        guard users.contains(where: { $0.username == normalizedUsername }) == false else {
-            throw AuthRepositoryError.userAlreadyExists
-        }
-
-        let user = StoredUser(
-            fullName: normalizedFullName,
-            username: normalizedUsername,
-            password: normalizedPassword
+        let response = try await sendRequest(
+            path: "register/customer",
+            body: RegisterRequest(
+                fullName: trimmedFullName,
+                userName: trimmedUsername,
+                password: trimmedPassword
+            )
         )
 
-        users.append(user)
-        try persist(users, to: usersFileURL)
-
-        let session = makeSession(for: user)
+        let session = try makeSession(
+            jwt: response.jwt,
+            fallbackUsername: trimmedUsername,
+            fallbackFullName: trimmedFullName
+        )
         try persist(session, to: sessionFileURL)
         return session
     }
 
     func logout() async {
-        try? await Task.sleep(for: .milliseconds(100))
-
-        guard fileManager.fileExists(atPath: sessionFileURL.path) else { return }
-        try? fileManager.removeItem(at: sessionFileURL)
-    }
-
-    private func makeSession(for user: StoredUser) -> AuthSession {
-        AuthSession(
-            token: makeMockJWTToken(for: user),
-            username: user.username,
-            fullName: user.fullName
-        )
-    }
-
-    private func loadUsers() -> [StoredUser] {
-        guard let data = try? Data(contentsOf: usersFileURL) else {
-            return []
-        }
-
-        return (try? decoder.decode([StoredUser].self, from: data)) ?? []
+        clearPersistedSession()
     }
 
     private func loadSession() -> AuthSession? {
@@ -132,41 +186,132 @@ final class AuthRepository: AuthRepositoryProtocol {
         try data.write(to: url, options: .atomic)
     }
 
-    private func normalize(_ username: String) -> String {
-        username
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
+    private func sendRequest<Body: Encodable>(
+        path: String,
+        body: Body
+    ) async throws -> AuthTokenResponse {
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = "POST"
+        request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try encoder.encode(body)
+
+        let data: Data
+        let response: URLResponse
+
+        do {
+            (data, response) = try await urlSession.data(for: request)
+        } catch {
+            throw AuthRepositoryError.transport(error.localizedDescription)
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthRepositoryError.invalidServerResponse
+        }
+
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw decodeAPIError(from: data, statusCode: httpResponse.statusCode)
+        }
+
+        do {
+            return try decoder.decode(AuthTokenResponse.self, from: data)
+        } catch {
+            throw AuthRepositoryError.invalidServerResponse
+        }
     }
 
-    private func makeMockJWTToken(for user: StoredUser) -> String {
-        let header = ["alg": "HS256", "typ": "JWT"]
-        let payload = [
-            "sub": user.username,
-            "name": user.fullName,
-            "iss": "NobleCut.mock",
-            "iat": ISO8601DateFormatter().string(from: Date())
-        ]
+    private func makeSession(
+        jwt: String,
+        fallbackUsername: String,
+        fallbackFullName: String?
+    ) throws -> AuthSession {
+        guard !jwt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw AuthRepositoryError.missingToken
+        }
 
-        let encodedHeader = encodeJWTComponent(header)
-        let encodedPayload = encodeJWTComponent(payload)
-        let signature = Data(UUID().uuidString.utf8)
-            .base64EncodedString()
-            .jwtBase64URLComponent()
+        let claims = decodeJWTClaims(from: jwt)
+        let username = claims?.resolvedUsername ?? fallbackUsername
 
-        return "\(encodedHeader).\(encodedPayload).\(signature)"
+        guard !username.isEmpty else {
+            throw AuthRepositoryError.invalidTokenPayload
+        }
+
+        let fullName = fallbackFullName?.nilIfBlank
+            ?? claims?.resolvedFullName
+            ?? prettifiedDisplayName(from: username)
+
+        return AuthSession(token: jwt, username: username, fullName: fullName)
     }
 
-    private func encodeJWTComponent(_ value: [String: String]) -> String {
-        let data = (try? JSONSerialization.data(withJSONObject: value, options: [])) ?? Data()
-        return data.base64EncodedString().jwtBase64URLComponent()
+    private func decodeAPIError(from data: Data, statusCode: Int) -> AuthRepositoryError {
+        if let response = try? decoder.decode(APIErrorResponse.self, from: data) {
+            let message = response.error?.nilIfBlank ?? response.message?.nilIfBlank
+            if let message {
+                if statusCode == 404 {
+                    return .invalidCredentials
+                }
+
+                if message.localizedCaseInsensitiveContains("already") {
+                    return .userAlreadyExists
+                }
+
+                return .server(message)
+            }
+        }
+
+        return statusCode == 404
+            ? .invalidCredentials
+            : .server("Authentication failed with status code \(statusCode).")
     }
 
-    private var usersFileURL: URL {
-        cachesDirectoryURL.appendingPathComponent("mock_auth_users.json")
+    private func decodeJWTClaims(from jwt: String) -> JWTClaims? {
+        let segments = jwt.split(separator: ".")
+        guard segments.count > 1 else { return nil }
+
+        let payload = String(segments[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let paddingLength = (4 - payload.count % 4) % 4
+        let paddedPayload = payload + String(repeating: "=", count: paddingLength)
+
+        guard let data = Data(base64Encoded: paddedPayload) else {
+            return nil
+        }
+
+        return try? decoder.decode(JWTClaims.self, from: data)
+    }
+
+    private func isTokenStillValid(_ token: String) -> Bool {
+        guard let expiration = decodeJWTClaims(from: token)?.expiration else {
+            return false
+        }
+
+        return Date(timeIntervalSince1970: expiration) > Date()
+    }
+
+    private func prettifiedDisplayName(from username: String) -> String {
+        let formatted = username
+            .replacingOccurrences(of: ".", with: " ")
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .split(separator: " ")
+            .map { String($0).capitalized }
+            .joined(separator: " ")
+
+        return formatted.nilIfBlank ?? username
+    }
+
+    private func clearPersistedSession() {
+        guard fileManager.fileExists(atPath: sessionFileURL.path) else {
+            return
+        }
+
+        try? fileManager.removeItem(at: sessionFileURL)
     }
 
     private var sessionFileURL: URL {
-        cachesDirectoryURL.appendingPathComponent("mock_auth_session.json")
+        cachesDirectoryURL.appendingPathComponent("smartappt_auth_session.json")
     }
 
     private var cachesDirectoryURL: URL {
@@ -176,9 +321,8 @@ final class AuthRepository: AuthRepositoryProtocol {
 }
 
 private extension String {
-    func jwtBase64URLComponent() -> String {
-        replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

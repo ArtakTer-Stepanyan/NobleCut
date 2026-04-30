@@ -113,7 +113,7 @@ struct SideMenuView: View {
                     .font(.system(size: 18, weight: .medium, design: .serif))
                     .foregroundStyle(.appYellow)
 
-                Text("Your local session is active. This token is mocked and cached on device until you log out.")
+                Text("Your SmartAppt session is active. The JWT is cached on this device until it expires or you log out.")
                     .font(.system(size: 15, weight: .regular, design: .serif))
                     .foregroundStyle(.white.opacity(0.68))
                     .lineSpacing(6)
@@ -122,7 +122,7 @@ struct SideMenuView: View {
             VStack(alignment: .leading, spacing: 12) {
                 menuInfoRow(
                     title: "Session",
-                    value: "Mock JWT cached locally"
+                    value: "SmartAppt JWT cached locally"
                 )
 
                 menuInfoRow(

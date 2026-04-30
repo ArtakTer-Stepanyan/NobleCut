@@ -33,9 +33,9 @@ enum AuthMode: Equatable {
     var description: String {
         switch self {
         case .login:
-            return "Sign in with your username and password. A mock session token is cached locally after login."
+            return "Sign in with your SmartAppt username and password. Your JWT is cached locally after login."
         case .register:
-            return "Create a local profile with your full name, username, and password. You’ll be signed in immediately."
+            return "Create a SmartAppt customer account with your full name, username, and password. You’ll be signed in immediately."
         }
     }
 

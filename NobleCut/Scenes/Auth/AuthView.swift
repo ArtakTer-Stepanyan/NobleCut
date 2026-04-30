@@ -110,7 +110,7 @@ struct AuthView: View {
                     .font(.system(size: 30, weight: .semibold, design: .serif))
                     .foregroundStyle(.white)
 
-                Text("Your session is mocked locally for now, but the flow is wired like a real auth gate.")
+                Text("This form talks directly to SmartAppt auth and stores the returned JWT on this device.")
                     .font(.system(size: 14, design: .serif))
                     .foregroundStyle(.white.opacity(0.62))
                     .lineSpacing(5)
