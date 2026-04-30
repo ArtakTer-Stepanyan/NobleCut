@@ -11,9 +11,21 @@ struct BookingView: View {
     @StateObject private var viewModel: BookingViewModel
     @State private var isContentVisible = false
     @State private var hasAnimatedOnce = false
+    private let onCancel: () -> Void
+    private let onConfirmed: () -> Void
 
-    init(viewModel: BookingViewModel = BookingViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    @MainActor
+    init(
+        viewModel: BookingViewModel? = nil,
+        onCancel: @escaping () -> Void = {},
+        onConfirmed: @escaping () -> Void = {}
+    ) {
+        let fallbackViewModel = BookingViewModel(
+            service: .init(id: 0, type: .haircut, price: 45, duration: 35)
+        )
+        _viewModel = StateObject(wrappedValue: viewModel ?? fallbackViewModel)
+        self.onCancel = onCancel
+        self.onConfirmed = onConfirmed
     }
 
     var body: some View {
@@ -24,20 +36,33 @@ struct BookingView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 22) {
                     NavigationBar()
-                    BookingHeaderView()
-                    BookingCalendarView()
+                    BookingHeaderView(service: viewModel.state.service)
+                    BookingCalendarView(
+                        selectedDate: viewModel.state.selectedDate,
+                        displayedMonth: viewModel.state.displayedMonth,
+                        availableDateRange: viewModel.state.availableDateRange,
+                        onSelectDate: viewModel.selectDate,
+                        onDisplayMonthChange: viewModel.updateDisplayedMonth
+                    )
                         .screenEntrance(isVisible: isContentVisible)
 
-                    VStack(spacing: 28) {
-                        ForEach(Array(viewModel.state.timeSections.enumerated()), id: \.element.id) { indexedSection in
-                            timeSectionView(for: indexedSection.element)
-                                .screenEntrance(
-                                    isVisible: isContentVisible,
-                                    delay: 0.08 + (Double(indexedSection.offset) * 0.08)
-                                )
+                    if viewModel.state.isLoading {
+                        ProgressView("Loading availability...")
+                            .tint(.appYellow)
+                            .foregroundStyle(.white.opacity(0.8))
+                            .padding(.vertical, 36)
+                    } else {
+                        VStack(spacing: 28) {
+                            ForEach(Array(viewModel.state.timeSections.enumerated()), id: \.element.id) { indexedSection in
+                                timeSectionView(for: indexedSection.element)
+                                    .screenEntrance(
+                                        isVisible: isContentVisible,
+                                        delay: 0.08 + (Double(indexedSection.offset) * 0.08)
+                                    )
+                            }
                         }
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.horizontal, 16)
 
                     footer
                         .screenEntrance(isVisible: isContentVisible, delay: 0.32)
@@ -45,6 +70,9 @@ struct BookingView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 24)
             }
+        }
+        .task {
+            await viewModel.loadAvailability()
         }
         .onAppear {
             guard !hasAnimatedOnce else {
@@ -114,16 +142,29 @@ struct BookingView: View {
                 foregroundColor: .appYellow,
                 backgroundColor: .clear,
                 borderColor: .appYellow,
-                isFilled: false
+                isFilled: false,
+                isDisabled: false
             )
+            {
+                onCancel()
+            }
 
             footerButton(
-                title: "CONFIRM\nSELECTION",
+                title: viewModel.state.isConfirming ? "SAVING..." : "CONFIRM\nSELECTION",
                 foregroundColor: Color.black.opacity(0.78),
                 backgroundColor: .appYellow,
                 borderColor: .appYellow,
-                isFilled: true
+                isFilled: true,
+                isDisabled: !viewModel.canConfirm
             )
+            {
+                Task {
+                    let didConfirm = await viewModel.confirmSelection()
+                    if didConfirm {
+                        onConfirmed()
+                    }
+                }
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 16)
@@ -141,11 +182,11 @@ struct BookingView: View {
         foregroundColor: Color,
         backgroundColor: Color,
         borderColor: Color,
-        isFilled: Bool
+        isFilled: Bool,
+        isDisabled: Bool,
+        action: @escaping () -> Void
     ) -> some View {
-        Button {
-            // Booking actions will be connected when the flow is integrated.
-        } label: {
+        Button(action: action) {
             Text(title)
                 .multilineTextAlignment(.center)
                 .font(.system(size: 15, weight: .bold))
@@ -162,6 +203,8 @@ struct BookingView: View {
                 )
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.55 : 1)
     }
 }
 

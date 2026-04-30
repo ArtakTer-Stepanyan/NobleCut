@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct Service: Codable, Identifiable {
+struct Service: Codable, Identifiable, Equatable {
     let id: Int
     let type: ServiceType
     let price: Int
     var duration: Int = 10
 }
 
-enum ServiceType: Int, Codable {
+enum ServiceType: Int, Codable, CaseIterable {
     case haircut = 1
     case trim = 2
     case deluxe = 3
@@ -27,6 +27,17 @@ enum ServiceType: Int, Codable {
             return "Beard Trim & Sculpt"
         case .deluxe:
             return "Deluxe Straight Razor Shave"
+        }
+    }
+
+    var sectionTitle: String {
+        switch self {
+        case .haircut:
+            return "Haircuts"
+        case .trim:
+            return "Beard Care"
+        case .deluxe:
+            return "Deluxe Rituals"
         }
     }
     

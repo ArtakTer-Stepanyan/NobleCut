@@ -8,44 +8,60 @@
 import SwiftUI
 
 struct ServiceView: View {
-    
-    @StateObject var viewModel: ServiceViewModel = ServiceViewModel()
+
+    @StateObject private var viewModel: ServiceViewModel
     @State private var isContentVisible = false
     @State private var hasAnimatedOnce = false
-    
+    private let onSelectService: (Service) -> Void
+
+    @MainActor
+    init(
+        viewModel: ServiceViewModel? = nil,
+        onSelectService: @escaping (Service) -> Void = { _ in }
+    ) {
+        _viewModel = StateObject(wrappedValue: viewModel ?? ServiceViewModel())
+        self.onSelectService = onSelectService
+    }
+
     var body: some View {
         ZStack {
             Color.black
                 .ignoresSafeArea()
-            
+
             ScrollView(.vertical, showsIndicators: false) {
-                VStack() {
+                VStack {
                     NavigationBar()
                         .screenEntrance(isVisible: isContentVisible)
-                    
+
                     ServiceHeaderView()
                         .screenEntrance(isVisible: isContentVisible, delay: 0.08)
-                    
-                    VStack(alignment: .leading, spacing: 33) {
-                        ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { indexedSection in
-                            let section = indexedSection.element
-                            let sectionIndex = indexedSection.offset
 
-                            HStack(spacing: 16) {
-                                Image(section.type.iconName)
-                                Text("Section")
-                                    .font(.system(size: 32))
-                                    .foregroundStyle(Color.white)
-                                
-                            }
-                            .padding(.horizontal, 12)
-                            .screenEntrance(
-                                isVisible: isContentVisible,
-                                delay: sectionDelay(for: sectionIndex)
-                            )
-                            
-                            ForEach(Array(section.services.enumerated()), id: \.element.id) { indexedService in
-                                ServiceItemView(service: indexedService.element)
+                    if viewModel.isLoading && viewModel.sections.isEmpty {
+                        ProgressView()
+                            .tint(.appYellow)
+                            .padding(.top, 60)
+                    } else {
+                        VStack(alignment: .leading, spacing: 33) {
+                            ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { indexedSection in
+                                let section = indexedSection.element
+                                let sectionIndex = indexedSection.offset
+
+                                HStack(spacing: 16) {
+                                    Image(section.type.iconName)
+                                    Text(section.type.sectionTitle)
+                                        .font(.system(size: 32))
+                                        .foregroundStyle(Color.white)
+                                }
+                                .padding(.horizontal, 12)
+                                .screenEntrance(
+                                    isVisible: isContentVisible,
+                                    delay: sectionDelay(for: sectionIndex)
+                                )
+
+                                ForEach(Array(section.services.enumerated()), id: \.element.id) { indexedService in
+                                    ServiceItemView(service: indexedService.element) {
+                                        onSelectService(indexedService.element)
+                                    }
                                     .screenEntrance(
                                         isVisible: isContentVisible,
                                         delay: serviceDelay(
@@ -53,15 +69,18 @@ struct ServiceView: View {
                                             serviceIndex: indexedService.offset
                                         )
                                     )
+                                }
                             }
                         }
+                        .padding(.top, 32)
                     }
-                    .padding(.top, 32)
                 }
-                
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 20)
             }
+        }
+        .task {
+            await viewModel.loadServices()
         }
         .onAppear {
             guard !hasAnimatedOnce else {

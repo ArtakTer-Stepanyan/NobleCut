@@ -8,21 +8,22 @@
 import SwiftUI
 
 struct ReservationItemView: View {
+    let reservation: Reservation
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(spacing: 20) {
-                Image(systemName: "scissors")
+                Image(reservation.service.type.iconName)
                     .resizable()
                     .scaledToFit()
-                    .foregroundStyle(.appYellow)
                     .frame(width: 28, height: 28)
                 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Master Grooming")
+                    Text(reservation.service.type.title)
                         .font(.system(size: 20))
                         .foregroundStyle(.white)
                     
-                    Text("$85 • 30 min")
+                    Text("$\(reservation.service.price) • \(reservation.service.duration) min")
                         .font(.system(size: 18))
                         .foregroundStyle(.appYellow)
                 }
@@ -32,17 +33,18 @@ struct ReservationItemView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "calendar")
                         .foregroundStyle(.white)
-                    Text("Monday, May 3")
+                    Text(reservation.scheduledAt.formattedReservationDate)
                         .foregroundStyle(Color.white)
                 }
                 HStack(spacing: 16) {
                     Image(systemName: "clock")
                         .foregroundStyle(.white)
-                    Text("12:45 PM")
+                    Text(reservation.scheduledAt.formattedReservationTime)
                         .foregroundStyle(Color.white)
                 }
             }
         }
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity, maxHeight: 175, alignment: .leading)
         .padding(.leading, 32)
         .padding(.trailing, 16)
@@ -55,5 +57,20 @@ struct ReservationItemView: View {
 }
 
 #Preview {
-    ReservationItemView()
+    ReservationItemView(
+        reservation: Reservation(
+            service: .init(id: 0, type: .deluxe, price: 85, duration: 60),
+            scheduledAt: Date()
+        )
+    )
+}
+
+private extension Date {
+    var formattedReservationDate: String {
+        formatted(.dateTime.weekday(.wide).month(.wide).day())
+    }
+
+    var formattedReservationTime: String {
+        formatted(.dateTime.hour().minute())
+    }
 }

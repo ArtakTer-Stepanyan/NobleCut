@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ServiceItemView: View {
-    
     let service: Service
-    
+    let onSelect: () -> Void
+
     var body: some View {
         VStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
@@ -39,9 +39,7 @@ struct ServiceItemView: View {
                 
                 Spacer()
                 
-                Button {
-                    // action
-                } label: {
+                Button(action: onSelect) {
                     Text("SELECT")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(.appYellow)
@@ -63,5 +61,5 @@ struct ServiceItemView: View {
 }
 
 #Preview {
-    ServiceItemView(service: .init(id: 1, type: .haircut, price: 45, duration: 20))
+    ServiceItemView(service: .init(id: 1, type: .haircut, price: 45, duration: 20)) {}
 }

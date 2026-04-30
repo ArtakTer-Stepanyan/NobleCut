@@ -9,6 +9,22 @@ import Foundation
 import SwiftUI
 import Combine
 
-class ReservationViewModel: ObservableObject {
-    @SwiftUI.Published var reservations: [Reservation] = []
+@MainActor
+final class ReservationViewModel: ObservableObject {
+    @Published private(set) var reservations: [Reservation] = []
+    @Published private(set) var isLoading = false
+
+    private let repository: any ReservationRepositoryProtocol
+
+    init(repository: (any ReservationRepositoryProtocol)? = nil) {
+        self.repository = repository ?? ReservationRepository()
+    }
+
+    func loadReservations() async {
+        guard !isLoading else { return }
+
+        isLoading = true
+        reservations = await repository.fetchReservations()
+        isLoading = false
+    }
 }

@@ -8,28 +8,16 @@
 import SwiftUI
 
 struct BookingCalendarView: View {
-    private static var bookingCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.locale = .autoupdatingCurrent
-        calendar.timeZone = .autoupdatingCurrent
-        calendar.firstWeekday = 1
-        return calendar
-    }()
-
     private static let weekdaySymbols = ["S", "M", "T", "W", "T", "F", "S"]
 
-    @State private var selectedDate: Date
-    @State private var displayedMonth: Date
+    let selectedDate: Date
+    let displayedMonth: Date
+    let availableDateRange: ClosedRange<Date>
+    let onSelectDate: (Date) -> Void
+    let onDisplayMonthChange: (Date) -> Void
 
-    private let calendar = Self.bookingCalendar
+    private let calendar = BookingCalendarFactory.calendar
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
-
-    init() {
-        let today = Date()
-        let month = Self.bookingCalendar.startOfMonth(for: today)
-        _selectedDate = State(initialValue: today)
-        _displayedMonth = State(initialValue: month)
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
@@ -60,20 +48,24 @@ struct BookingCalendarView: View {
 
             Spacer()
 
-            calendarButton(systemImage: "chevron.left") {
-                displayedMonth = calendar.date(
+            calendarButton(systemImage: "chevron.left", isDisabled: !canGoToPreviousMonth) {
+                onDisplayMonthChange(
+                    calendar.date(
                     byAdding: .month,
                     value: -1,
                     to: displayedMonth
-                ) ?? displayedMonth
+                    ) ?? displayedMonth
+                )
             }
 
-            calendarButton(systemImage: "chevron.right") {
-                displayedMonth = calendar.date(
+            calendarButton(systemImage: "chevron.right", isDisabled: !canGoToNextMonth) {
+                onDisplayMonthChange(
+                    calendar.date(
                     byAdding: .month,
                     value: 1,
                     to: displayedMonth
-                ) ?? displayedMonth
+                    ) ?? displayedMonth
+                )
             }
         }
     }
@@ -93,8 +85,7 @@ struct BookingCalendarView: View {
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(monthDays) { day in
                 Button {
-                    selectedDate = day.date
-                    displayedMonth = calendar.startOfMonth(for: day.date)
+                    onSelectDate(day.date)
                 } label: {
                     Text(day.numberText)
                         .font(.system(size: 15, weight: day.isSelected ? .semibold : .medium))
@@ -107,6 +98,8 @@ struct BookingCalendarView: View {
                 }
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity)
+                .disabled(!day.isSelectable)
+                .opacity(day.isSelectable ? 1 : 0.28)
             }
         }
     }
@@ -136,7 +129,8 @@ struct BookingCalendarView: View {
                 date: date,
                 dayNumber: calendar.component(.day, from: date),
                 isInDisplayedMonth: calendar.isDate(date, equalTo: displayedMonth, toGranularity: .month),
-                isSelected: calendar.isDate(date, inSameDayAs: selectedDate)
+                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                isSelectable: isSelectable(date)
             )
         }
     }
@@ -151,7 +145,30 @@ struct BookingCalendarView: View {
             : Color.white.opacity(0.16)
     }
 
-    private func calendarButton(systemImage: String, action: @escaping () -> Void) -> some View {
+    private var canGoToPreviousMonth: Bool {
+        let currentMonth = calendar.startOfMonth(for: displayedMonth)
+        let previousMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+        return previousMonth >= calendar.startOfMonth(for: availableDateRange.lowerBound)
+    }
+
+    private var canGoToNextMonth: Bool {
+        let currentMonth = calendar.startOfMonth(for: displayedMonth)
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+        return nextMonth <= calendar.startOfMonth(for: availableDateRange.upperBound)
+    }
+
+    private func isSelectable(_ date: Date) -> Bool {
+        let normalizedDate = calendar.startOfDay(for: date)
+        let lowerBound = calendar.startOfDay(for: availableDateRange.lowerBound)
+        let upperBound = calendar.startOfDay(for: availableDateRange.upperBound)
+        return normalizedDate >= lowerBound && normalizedDate <= upperBound
+    }
+
+    private func calendarButton(
+        systemImage: String,
+        isDisabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 12, weight: .bold))
@@ -164,6 +181,8 @@ struct BookingCalendarView: View {
                 )
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.35 : 1)
     }
 }
 
@@ -172,21 +191,22 @@ private struct CalendarDay: Identifiable {
     let dayNumber: Int
     let isInDisplayedMonth: Bool
     let isSelected: Bool
+    let isSelectable: Bool
 
     var id: Date { date }
     var numberText: String { String(dayNumber) }
 }
 
-private extension Calendar {
-    func startOfMonth(for date: Date) -> Date {
-        dateInterval(of: .month, for: date)?.start ?? date
-    }
-}
-
 #Preview {
     ZStack {
         Color.black.ignoresSafeArea()
-        BookingCalendarView()
+        BookingCalendarView(
+            selectedDate: Date(),
+            displayedMonth: BookingCalendarFactory.calendar.startOfMonth(for: Date()),
+            availableDateRange: Date()...(BookingCalendarFactory.calendar.date(byAdding: .day, value: 30, to: Date()) ?? Date()),
+            onSelectDate: { _ in },
+            onDisplayMonthChange: { _ in }
+        )
     }
     .preferredColorScheme(.dark)
 }

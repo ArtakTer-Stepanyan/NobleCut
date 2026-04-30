@@ -19,7 +19,7 @@ struct BarbersView: View {
                 .ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
+                VStack(spacing: 18) {
                     NavigationBar()
                         .screenEntrance(isVisible: isContentVisible)
                     

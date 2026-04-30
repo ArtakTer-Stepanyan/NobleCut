@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct NobleCutApp: App {
+    private let appContainer = AppContainer()
+
     var body: some Scene {
         WindowGroup {
-            MainScreenView()
+            MainScreenView(appContainer: appContainer)
                 .preferredColorScheme(.dark)
         }
     }
