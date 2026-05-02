@@ -15,12 +15,12 @@ struct HomeServiceItemView: View {
         HStack(alignment: .center, spacing: 20) {
             Image(service.type.iconName)
             VStack(alignment: .leading, spacing: 10) {
-                Text(service.type.title)
+                Text(service.displayTitle)
                     .font(.system(size: 22, design: .serif))
                     .minimumScaleFactor(0.8)
                     .lineLimit(1)
                     .foregroundStyle(Color.white)
-                Text(service.type.description)
+                Text(service.displayDescription)
                     .font(.system(size: 16, design: .serif))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

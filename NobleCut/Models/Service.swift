@@ -12,6 +12,50 @@ struct Service: Codable, Identifiable, Equatable {
     let type: ServiceType
     let price: Int
     var duration: Int = 10
+    let title: String
+    let details: String
+    let usesConfiguredIDFallback: Bool
+
+    init(
+        id: Int,
+        type: ServiceType,
+        price: Int,
+        duration: Int = 10,
+        title: String? = nil,
+        details: String? = nil,
+        usesConfiguredIDFallback: Bool = false
+    ) {
+        self.id = id
+        self.type = type
+        self.price = price
+        self.duration = duration
+        self.title = title ?? type.title
+        self.details = details ?? type.description
+        self.usesConfiguredIDFallback = usesConfiguredIDFallback
+    }
+
+    var displayTitle: String {
+        title
+    }
+
+    var displayDescription: String {
+        details
+    }
+}
+
+extension Service {
+    init(remotePayload: RemoteServicePayload) {
+        let inferredType = ServiceType.inferred(from: remotePayload.name)
+
+        self.init(
+            id: remotePayload.serviceId,
+            type: inferredType,
+            price: NSDecimalNumber(decimal: remotePayload.price).intValue,
+            duration: remotePayload.durationMin,
+            title: remotePayload.name,
+            details: inferredType.description
+        )
+    }
 }
 
 enum ServiceType: Int, Codable, CaseIterable {
@@ -61,5 +105,24 @@ enum ServiceType: Int, Codable, CaseIterable {
         case .deluxe:
             return "deluxe_icon"
         }
+    }
+
+    static func inferred(from serviceName: String) -> ServiceType {
+        let lowercasedName = serviceName.lowercased()
+
+        if lowercasedName.contains("beard") ||
+            lowercasedName.contains("trim") ||
+            lowercasedName.contains("mustache") {
+            return .trim
+        }
+
+        if lowercasedName.contains("shave") ||
+            lowercasedName.contains("razor") ||
+            lowercasedName.contains("deluxe") ||
+            lowercasedName.contains("ritual") {
+            return .deluxe
+        }
+
+        return .haircut
     }
 }

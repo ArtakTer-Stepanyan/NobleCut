@@ -8,9 +8,10 @@
 import Foundation
 
 struct BookingAvailability {
-    let initialDate: Date
+    let selectedDate: Date
     let defaultSelectedTimeID: String
     let availableDateRange: ClosedRange<Date>
+    let availableDates: [Date]
     let timeSections: [BookingTimeSection]
 }
 

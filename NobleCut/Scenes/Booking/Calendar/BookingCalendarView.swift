@@ -13,6 +13,7 @@ struct BookingCalendarView: View {
     let selectedDate: Date
     let displayedMonth: Date
     let availableDateRange: ClosedRange<Date>
+    let availableDates: [Date]
     let onSelectDate: (Date) -> Void
     let onDisplayMonthChange: (Date) -> Void
 
@@ -161,7 +162,11 @@ struct BookingCalendarView: View {
         let normalizedDate = calendar.startOfDay(for: date)
         let lowerBound = calendar.startOfDay(for: availableDateRange.lowerBound)
         let upperBound = calendar.startOfDay(for: availableDateRange.upperBound)
-        return normalizedDate >= lowerBound && normalizedDate <= upperBound
+        guard normalizedDate >= lowerBound, normalizedDate <= upperBound else {
+            return false
+        }
+
+        return availableDates.contains(where: { calendar.isDate($0, inSameDayAs: normalizedDate) })
     }
 
     private func calendarButton(
@@ -204,6 +209,7 @@ private struct CalendarDay: Identifiable {
             selectedDate: Date(),
             displayedMonth: BookingCalendarFactory.calendar.startOfMonth(for: Date()),
             availableDateRange: Date()...(BookingCalendarFactory.calendar.date(byAdding: .day, value: 30, to: Date()) ?? Date()),
+            availableDates: [Date()],
             onSelectDate: { _ in },
             onDisplayMonthChange: { _ in }
         )

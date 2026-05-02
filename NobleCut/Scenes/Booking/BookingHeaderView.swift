@@ -16,11 +16,11 @@ struct BookingHeaderView: View {
                 .font(.system(size: 18, design: .serif))
                 .foregroundStyle(.appYellow)
 
-            Text(service.type.title)
+            Text(service.displayTitle)
                 .font(.system(size: 28, weight: .semibold, design: .serif))
                 .foregroundStyle(.white)
 
-            Text("\(service.type.description) • \(service.duration) min • $\(service.price)")
+            Text("\(service.displayDescription) • \(service.duration) min • $\(service.price)")
                 .font(.system(size: 16, design: .serif))
                 .foregroundStyle(Color.textGray)
 

@@ -19,7 +19,7 @@ struct ReservationItemView: View {
                     .frame(width: 28, height: 28)
                 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(reservation.service.type.title)
+                    Text(reservation.service.displayTitle)
                         .font(.system(size: 20, design: .serif))
                         .foregroundStyle(.white)
                     

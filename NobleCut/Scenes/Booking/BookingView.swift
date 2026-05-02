@@ -41,6 +41,7 @@ struct BookingView: View {
                         selectedDate: viewModel.state.selectedDate,
                         displayedMonth: viewModel.state.displayedMonth,
                         availableDateRange: viewModel.state.availableDateRange,
+                        availableDates: viewModel.state.availableDates,
                         onSelectDate: viewModel.selectDate,
                         onDisplayMonthChange: viewModel.updateDisplayedMonth
                     )
@@ -136,32 +137,42 @@ struct BookingView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 12) {
-            footerButton(
-                title: "CANCEL",
-                foregroundColor: .appYellow,
-                backgroundColor: .clear,
-                borderColor: .appYellow,
-                isFilled: false,
-                isDisabled: false
-            )
-            {
-                onCancel()
+        VStack(spacing: 12) {
+            if let errorMessage = viewModel.state.errorMessage {
+                Text(errorMessage)
+                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .foregroundStyle(.appYellow)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 6)
             }
 
-            footerButton(
-                title: viewModel.state.isConfirming ? "SAVING..." : "CONFIRM\nSELECTION",
-                foregroundColor: Color.black.opacity(0.78),
-                backgroundColor: .appYellow,
-                borderColor: .appYellow,
-                isFilled: true,
-                isDisabled: !viewModel.canConfirm
-            )
-            {
-                Task {
-                    let didConfirm = await viewModel.confirmSelection()
-                    if didConfirm {
-                        onConfirmed()
+            HStack(spacing: 12) {
+                footerButton(
+                    title: "CANCEL",
+                    foregroundColor: .appYellow,
+                    backgroundColor: .clear,
+                    borderColor: .appYellow,
+                    isFilled: false,
+                    isDisabled: false
+                )
+                {
+                    onCancel()
+                }
+
+                footerButton(
+                    title: viewModel.state.isConfirming ? "SAVING..." : "CONFIRM\nSELECTION",
+                    foregroundColor: Color.black.opacity(0.78),
+                    backgroundColor: .appYellow,
+                    borderColor: .appYellow,
+                    isFilled: true,
+                    isDisabled: !viewModel.canConfirm
+                )
+                {
+                    Task {
+                        let didConfirm = await viewModel.confirmSelection()
+                        if didConfirm {
+                            onConfirmed()
+                        }
                     }
                 }
             }

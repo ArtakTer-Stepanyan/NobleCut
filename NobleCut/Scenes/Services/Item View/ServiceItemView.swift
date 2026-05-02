@@ -15,7 +15,7 @@ struct ServiceItemView: View {
         VStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text(service.type.title)
+                    Text(service.displayTitle)
                         .font(.system(size: 22, weight: .semibold, design: .serif))
                         .minimumScaleFactor(0.8)
                         .foregroundStyle(Color.white)
@@ -27,7 +27,7 @@ struct ServiceItemView: View {
                         .foregroundStyle(Color.appYellow)
                 }
                 
-                Text(service.type.description)
+                Text(service.displayDescription)
                     .font(.system(size: 14, design: .serif))
                     .foregroundStyle(Color.textGray)
             }

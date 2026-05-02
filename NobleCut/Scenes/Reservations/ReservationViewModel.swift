@@ -14,6 +14,7 @@ final class ReservationViewModel: ObservableObject {
     @Published private(set) var reservations: [Reservation] = []
     @Published private(set) var isLoading = false
     @Published private(set) var reservationPendingCancellation: Reservation?
+    @Published private(set) var errorMessage: String?
 
     private let repository: any ReservationRepositoryProtocol
 
@@ -25,7 +26,13 @@ final class ReservationViewModel: ObservableObject {
         guard !isLoading else { return }
 
         isLoading = true
-        reservations = await repository.fetchReservations()
+        do {
+            reservations = try await repository.fetchReservations()
+            errorMessage = nil
+        } catch {
+            reservations = []
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn’t load reservations."
+        }
         isLoading = false
     }
 
@@ -40,9 +47,12 @@ final class ReservationViewModel: ObservableObject {
     func cancelReservation(_ reservation: Reservation) async {
         reservationPendingCancellation = nil
 
-        let didDelete = await repository.deleteReservation(id: reservation.id)
-        guard didDelete else { return }
-
-        reservations.removeAll { $0.id == reservation.id }
+        do {
+            try await repository.deleteReservation(id: reservation.id)
+            reservations.removeAll { $0.id == reservation.id }
+            errorMessage = nil
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn’t cancel the reservation."
+        }
     }
 }

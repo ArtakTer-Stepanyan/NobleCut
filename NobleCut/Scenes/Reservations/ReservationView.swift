@@ -28,6 +28,14 @@ struct ReservationView: View {
             
             VStack(spacing: 0) {
                 NavigationBar(onMenuTap: onMenuTap)
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 14, weight: .medium, design: .serif))
+                        .foregroundStyle(.appYellow)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 18)
+                }
                 if !viewModel.reservations.isEmpty {
                     ScrollView(.vertical) {
                         VStack(spacing: 16) {
@@ -83,7 +91,7 @@ struct ReservationView: View {
                 }
             }
         } message: { reservation in
-            Text("Do you want to cancel your \(reservation.service.type.title) reservation?")
+            Text("Do you want to cancel your \(reservation.service.displayTitle) reservation?")
         }
     }
 

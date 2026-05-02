@@ -15,44 +15,6 @@ protocol AuthRepositoryProtocol: AnyObject {
 }
 
 final class AuthRepository: AuthRepositoryProtocol {
-    private struct LoginRequest: Encodable {
-        let userName: String
-        let password: String
-
-        enum CodingKeys: String, CodingKey {
-            case userName = "UserName"
-            case password = "Password"
-        }
-    }
-
-    private struct RegisterRequest: Encodable {
-        let fullName: String
-        let userName: String
-        let password: String
-
-        enum CodingKeys: String, CodingKey {
-            case fullName = "FullName"
-            case userName = "UserName"
-            case password = "Password"
-        }
-    }
-
-    private struct AuthTokenResponse: Decodable {
-        let jwt: String
-    }
-
-    private struct APIErrorResponse: Decodable {
-        let error: String?
-        let message: String?
-        let status: Int?
-
-        enum CodingKeys: String, CodingKey {
-            case error = "Error"
-            case message
-            case status = "Status"
-        }
-    }
-
     private struct JWTClaims: Decodable {
         let expiration: TimeInterval?
         let uniqueName: String?
@@ -77,34 +39,25 @@ final class AuthRepository: AuthRepositoryProtocol {
         }
     }
 
-    static let defaultBaseURL = URL(
-        string: ProcessInfo.processInfo.environment["NOBLECUT_AUTH_BASE_URL"]
-            ?? "http://localhost:5141/api/Auth"
-    )!
-
-    private let baseURL: URL
-    private let urlSession: URLSession
-    private let fileManager: FileManager
-    private let encoder = JSONEncoder()
+    private let apiService: any AuthServiceProtocol
+    private let sessionStore: any AuthSessionStoreProtocol
     private let decoder = JSONDecoder()
 
     init(
-        baseURL: URL = AuthRepository.defaultBaseURL,
-        urlSession: URLSession = .shared,
-        fileManager: FileManager = .default
+        apiService: any AuthServiceProtocol = AuthService(),
+        sessionStore: any AuthSessionStoreProtocol = AuthSessionStore.shared
     ) {
-        self.baseURL = baseURL
-        self.urlSession = urlSession
-        self.fileManager = fileManager
+        self.apiService = apiService
+        self.sessionStore = sessionStore
     }
 
     func restoreSession() async -> AuthSession? {
-        guard let session = loadSession() else {
+        guard let session = sessionStore.loadSession() else {
             return nil
         }
 
         guard isTokenStillValid(session.token) else {
-            clearPersistedSession()
+            sessionStore.clearSession()
             return nil
         }
 
@@ -119,9 +72,9 @@ final class AuthRepository: AuthRepositoryProtocol {
             throw AuthRepositoryError.invalidCredentials
         }
 
-        let response = try await sendRequest(
-            path: "login",
-            body: LoginRequest(userName: trimmedUsername, password: trimmedPassword)
+        let response = try await apiService.login(
+            username: trimmedUsername,
+            password: trimmedPassword
         )
 
         let session = try makeSession(
@@ -129,96 +82,32 @@ final class AuthRepository: AuthRepositoryProtocol {
             fallbackUsername: trimmedUsername,
             fallbackFullName: nil
         )
-        try persist(session, to: sessionFileURL)
+        try sessionStore.saveSession(session)
         return session
     }
 
     func register(fullName: String, username: String, password: String) async throws -> AuthSession {
-        let trimmedFullName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !trimmedFullName.isEmpty, !trimmedUsername.isEmpty, !trimmedPassword.isEmpty else {
+        guard !fullName.isEmpty, !username.isEmpty, !password.isEmpty else {
             throw AuthRepositoryError.invalidRegistrationData
         }
 
-        let response = try await sendRequest(
-            path: "register/customer",
-            body: RegisterRequest(
-                fullName: trimmedFullName,
-                userName: trimmedUsername,
-                password: trimmedPassword
-            )
+        let response = try await apiService.registerCustomer(
+            fullName: fullName,
+            username: username,
+            password: password
         )
 
         let session = try makeSession(
             jwt: response.jwt,
-            fallbackUsername: trimmedUsername,
-            fallbackFullName: trimmedFullName
+            fallbackUsername: username,
+            fallbackFullName: fullName
         )
-        try persist(session, to: sessionFileURL)
+        try sessionStore.saveSession(session)
         return session
     }
 
     func logout() async {
-        clearPersistedSession()
-    }
-
-    private func loadSession() -> AuthSession? {
-        guard let data = try? Data(contentsOf: sessionFileURL) else {
-            return nil
-        }
-
-        return try? decoder.decode(AuthSession.self, from: data)
-    }
-
-    private func persist<T: Encodable>(_ value: T, to url: URL) throws {
-        let directoryURL = url.deletingLastPathComponent()
-        if !fileManager.fileExists(atPath: directoryURL.path) {
-            try fileManager.createDirectory(
-                at: directoryURL,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-        }
-
-        let data = try encoder.encode(value)
-        try data.write(to: url, options: .atomic)
-    }
-
-    private func sendRequest<Body: Encodable>(
-        path: String,
-        body: Body
-    ) async throws -> AuthTokenResponse {
-        var request = URLRequest(url: baseURL.appendingPathComponent(path))
-        request.httpMethod = "POST"
-        request.timeoutInterval = 20
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try encoder.encode(body)
-
-        let data: Data
-        let response: URLResponse
-
-        do {
-            (data, response) = try await urlSession.data(for: request)
-        } catch {
-            throw AuthRepositoryError.transport(error.localizedDescription)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthRepositoryError.invalidServerResponse
-        }
-
-        guard (200 ..< 300).contains(httpResponse.statusCode) else {
-            throw decodeAPIError(from: data, statusCode: httpResponse.statusCode)
-        }
-
-        do {
-            return try decoder.decode(AuthTokenResponse.self, from: data)
-        } catch {
-            throw AuthRepositoryError.invalidServerResponse
-        }
+        sessionStore.clearSession()
     }
 
     private func makeSession(
@@ -242,27 +131,6 @@ final class AuthRepository: AuthRepositoryProtocol {
             ?? prettifiedDisplayName(from: username)
 
         return AuthSession(token: jwt, username: username, fullName: fullName)
-    }
-
-    private func decodeAPIError(from data: Data, statusCode: Int) -> AuthRepositoryError {
-        if let response = try? decoder.decode(APIErrorResponse.self, from: data) {
-            let message = response.error?.nilIfBlank ?? response.message?.nilIfBlank
-            if let message {
-                if statusCode == 404 {
-                    return .invalidCredentials
-                }
-
-                if message.localizedCaseInsensitiveContains("already") {
-                    return .userAlreadyExists
-                }
-
-                return .server(message)
-            }
-        }
-
-        return statusCode == 404
-            ? .invalidCredentials
-            : .server("Authentication failed with status code \(statusCode).")
     }
 
     private func decodeJWTClaims(from jwt: String) -> JWTClaims? {
@@ -300,23 +168,6 @@ final class AuthRepository: AuthRepositoryProtocol {
             .joined(separator: " ")
 
         return formatted.nilIfBlank ?? username
-    }
-
-    private func clearPersistedSession() {
-        guard fileManager.fileExists(atPath: sessionFileURL.path) else {
-            return
-        }
-
-        try? fileManager.removeItem(at: sessionFileURL)
-    }
-
-    private var sessionFileURL: URL {
-        cachesDirectoryURL.appendingPathComponent("smartappt_auth_session.json")
-    }
-
-    private var cachesDirectoryURL: URL {
-        (try? fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
-            ?? fileManager.temporaryDirectory
     }
 }
 
